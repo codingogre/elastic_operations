@@ -4,7 +4,7 @@
 ### Elastic config and functions ###
 ####################################
 
-$elastic_billing_uri = "https://api.elastic-cloud.com/api/v1/billing/costs/4118434301"
+$elastic_billing_uri = "https://api.elastic-cloud.com/api/v1/billing/costs/<redacted>"
 $elastic_billing_key = "ApiKey <redacted>" #billing_api
 $elastic_billing_headers = @{Authorization = $elastic_billing_key}
 
