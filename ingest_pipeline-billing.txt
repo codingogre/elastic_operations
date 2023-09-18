@@ -1,0 +1,56 @@
+{
+  "custom-billing_api-cost_overview-pipeline": {
+    "processors": [
+      {
+        "pipeline": {
+          "name": "set_event_ingest_timestamp"
+        }
+      },
+      {
+        "set": {
+          "field": "@timestamp",
+          "copy_from": "from"
+        }
+      },
+      {
+        "script": {
+          "lang": "painless",
+          "source": """ZonedDateTime now = ZonedDateTime.parse(ctx.from);
+ctx.balance.purchased = 0;
+ctx.balance.remaining = 0;
+ctx.balance.inactive = 0;
+
+// flatten costs.dimensions array
+ctx.costs.flattened = new HashMap();
+for (dimension in ctx.costs.dimensions) {
+  ctx.costs.flattened[dimension.get("type")] = dimension.get("cost");
+}
+ctx.costs.dimensions = ctx.costs.flattened;
+
+// add to active balance if current date is between the credit start and end date, else add to inactive balance
+for (line_item in ctx.balance.line_items) {
+  ZonedDateTime credit_start_date = ZonedDateTime.parse(line_item.start);
+  ZonedDateTime credit_end_date = ZonedDateTime.parse(line_item.end);
+
+  if ((now.isAfter(credit_start_date)) && (now.isBefore(credit_end_date))) {
+    ctx.balance.purchased = ctx.balance.purchased + line_item.ecu_quantity;
+    ctx.balance.remaining = ctx.balance.remaining + line_item.ecu_balance;
+  } else {
+    ctx.balance.inactive = ctx.balance.inactive + line_item.ecu_quantity;
+  }
+}"""
+        }
+      },
+      {
+        "remove": {
+          "field": [
+            "balance.available",
+            "balance.line_items",
+            "costs.flattened"
+          ],
+          "ignore_missing": true
+        }
+      }
+    ]
+  }
+}

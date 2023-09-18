@@ -1,0 +1,93 @@
+{
+  "count": 1,
+  "jobs": [
+    {
+      "job_id": "dana-forecasting-log_count_size",
+      "job_type": "anomaly_detector",
+      "job_version": "8.9.0",
+      "create_time": 1692797907375,
+      "model_snapshot_id": "1693310700",
+      "datafeed_config": {
+        "datafeed_id": "datafeed-dana-forecasting-log_count_size",
+        "job_id": "dana-forecasting-log_count_size",
+        "authorization": {
+          "roles": [
+            "superuser"
+          ]
+        },
+        "query_delay": "65m",
+        "chunking_config": {
+          "mode": "auto"
+        },
+        "indices_options": {
+          "expand_wildcards": [
+            "open"
+          ],
+          "ignore_unavailable": false,
+          "allow_no_indices": true,
+          "ignore_throttled": true
+        },
+        "query": {
+          "bool": {
+            "must": [
+              {
+                "match_all": {}
+              }
+            ]
+          }
+        },
+        "frequency": "60m",
+        "indices": [
+          "transform-hourly_dataset_summary"
+        ],
+        "scroll_size": 10000,
+        "delayed_data_check_config": {
+          "enabled": true
+        }
+      },
+      "groups": [
+        "dana"
+      ],
+      "description": "Forecasting job to predict log volume and size based on transform data.",
+      "analysis_config": {
+        "bucket_span": "1h",
+        "detectors": [
+          {
+            "detector_description": "sum(\"metrics.count\") partitionfield=\"event.dataset.keyword\"",
+            "function": "sum",
+            "field_name": "metrics.count",
+            "partition_field_name": "event.dataset.keyword",
+            "detector_index": 0
+          },
+          {
+            "detector_description": "sum(\"metrics.size\") partitionfield=\"event.dataset.keyword\"",
+            "function": "sum",
+            "field_name": "metrics.size",
+            "partition_field_name": "event.dataset.keyword",
+            "detector_index": 1
+          }
+        ],
+        "influencers": [
+          "event.dataset.keyword"
+        ],
+        "model_prune_window": "30d"
+      },
+      "analysis_limits": {
+        "model_memory_limit": "14mb",
+        "categorization_examples_limit": 4
+      },
+      "data_description": {
+        "time_field": "@timestamp",
+        "time_format": "epoch_ms"
+      },
+      "model_plot_config": {
+        "enabled": true,
+        "annotations_enabled": true
+      },
+      "model_snapshot_retention_days": 10,
+      "daily_model_snapshot_retention_after_days": 1,
+      "results_index_name": "custom-dana-forecasting-log_count_size",
+      "allow_lazy_open": false
+    }
+  ]
+}

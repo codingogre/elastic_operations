@@ -1,0 +1,81 @@
+PUT _transform/transform-hourly_dataset_summary
+{
+  "source": {
+    "index": [
+      "logs-*"
+    ],
+    "query": {
+      "bool": {
+        "filter": [
+          {
+            "bool": {
+              "filter": [
+                {
+                  "bool": {
+                    "filter": [
+                      {
+                        "range": {
+                          "@timestamp": {
+                            "gte": "now-1h/h",
+                            "lte": "now/h"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "dest": {
+    "index": "transform-hourly_dataset_summary"
+  },
+  "frequency": "30m",
+  "sync": {
+    "time": {
+      "field": "@timestamp",
+      "delay": "60s"
+    }
+  },
+  "pivot": {
+    "group_by": {
+      "event.dataset": {
+        "terms": {
+          "field": "event.dataset"
+        }
+      },
+      "@timestamp": {
+        "date_histogram": {
+          "field": "@timestamp",
+          "calendar_interval": "1h"
+        }
+      }
+    },
+    "aggregations": {
+      "metrics.size": {
+        "sum": {
+          "field": "_size"
+        }
+      },
+      "metrics.count": {
+        "value_count": {
+          "field": "@timestamp"
+        }
+      }
+    }
+  },
+  "settings": {
+    "max_page_search_size": 10000,
+    "deduce_mappings": false
+  },
+  "retention_policy": {
+    "time": {
+      "field": "@timestamp",
+      "max_age": "1095d"
+    }
+  }
+}
